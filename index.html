@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- 凭证在 URL query 中：禁止 Referrer 外泄到任何外部站点 -->
+    <meta name="referrer" content="no-referrer" />
+    <title>ProactiveAI</title>
+    <script>
+      // 主题：跟随系统（亮/暗），挂 data-theme 供 --app-* token 生效
+      document.documentElement.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
