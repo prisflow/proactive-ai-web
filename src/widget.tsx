@@ -7,7 +7,7 @@
  */
 import { useState } from 'react'
 import type { WidgetNode } from './types/ui'
-import { icons } from 'lucide-react'
+import { ChevronDown, icons } from 'lucide-react'
 
 /** 交互动作：与桌面端 widget-system 的 WidgetAction 同构。 */
 interface WidgetAction {
@@ -102,7 +102,7 @@ export function WidgetRenderer({ node, onSend }: { node: WidgetNode; onSend: (te
             <span>{String(p.label ?? '')}</span>
             <span>{value}/{max}</span>
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/20 dark:bg-white/20">
             <div className={`h-full rounded-full ${bar[color] || bar.default}`} style={{ width: `${pct}%` }} />
           </div>
         </div>
@@ -137,23 +137,27 @@ export function WidgetRenderer({ node, onSend }: { node: WidgetNode; onSend: (te
       )
     }
     case 'Card':
-      return (
-        <div className="w-full rounded-xl border border-[var(--app-border)] p-3">
-          {p.title ? <div className="mb-1.5 text-xs font-medium opacity-80">{p.title}</div> : null}
-          <div className="flex flex-col gap-1">{kids}</div>
-        </div>
-      )
+      return <WidgetCardInline p={props} kids={kids} />
     case 'Badge': {
       const variant = String(p.variant ?? 'default')
       const vcls: Record<string, string> = {
-        default: 'bg-black/10 dark:bg-white/15',
-        success: 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
-        warning: 'bg-amber-500/20 text-amber-600 dark:text-amber-400',
-        danger: 'bg-red-500/20 text-red-600 dark:text-red-400',
+        default: 'bg-black/10 dark:bg-white/10 border-black/25 dark:border-white/25',
+        plain: '',
+        success: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400',
+        warning: 'bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-400',
+        danger: 'bg-red-500/15 border-red-500/40 text-red-600 dark:text-red-400',
       }
       const text = String(p.text ?? '')
-      if (!text) return null
-      return <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] ${vcls[variant] || vcls.default}`}>{text}</span>
+      const iconName = String(p.icon ?? '')
+      const I = iconName ? (icons as Record<string, React.ComponentType<{ size?: number; className?: string }>>)[iconName] : null
+      if (!text && !I) return null
+      const v = variant in vcls ? vcls[variant] : vcls.default
+      return (
+        <span className={`inline-flex items-center gap-1 ${p.wrap ? 'whitespace-normal' : 'whitespace-nowrap'} rounded-md border px-2 py-0.5 text-[11px] font-medium ${v} ${String(p.className ?? '')}`}>
+          {I ? <I size={12} /> : null}
+          {text}
+        </span>
+      )
     }
     case 'List': {
       const items = (p.items as string[] | undefined) ?? []
@@ -280,12 +284,41 @@ function WidgetConfirmInline({ p, onSend }: { p: Record<string, unknown>; onSend
 
   return (
     <div className="w-full rounded-xl border border-[var(--app-border)] p-3">
-      {p.title ? <div className="mb-1 text-xs font-medium">{p.title}</div> : null}
-      {p.content ? <div className="mb-2 text-xs opacity-70">{p.content}</div> : null}
+      {p.title ? <div className="mb-1 text-xs font-medium">{String(p.title)}</div> : null}
+      {p.content ? <div className="mb-2 text-xs opacity-70">{String(p.content)}</div> : null}
       <div className="flex gap-2">
         {btn(confirmLabel, confirmAction)}
         {btn(cancelLabel, cancelAction, 'opacity-70')}
       </div>
+    </div>
+  )
+}
+
+/** 卡片（内联组件）：标题可选 + 对齐 + 可折叠（标题行右侧箭头）。 */
+function WidgetCardInline({ p, kids }: { p: Record<string, unknown>; kids: React.ReactNode[] }): React.ReactNode {
+  const [collapsed, setCollapsed] = useState(!!p.collapsible && !!p.defaultCollapsed)
+  const align = String(p.titleAlign ?? 'left')
+  const alignCls = align === 'center' ? 'text-center' : 'text-left'
+  const collapsible = !!p.collapsible
+  const showHeader = !!p.title || collapsible
+  return (
+    <div className="w-full rounded-xl border border-[var(--app-border)] p-3">
+      {showHeader ? (
+        <div className={`relative mb-1.5 flex min-h-5 items-center ${alignCls}`}>
+          <div className={`flex-1 text-xs font-medium opacity-80 ${alignCls}`}>{String(p.title ?? '')}</div>
+          {collapsible ? (
+            <button
+              type="button"
+              onClick={() => setCollapsed(!collapsed)}
+              className="absolute right-0 flex h-5 w-5 items-center justify-center rounded text-[var(--app-muted)] hover:bg-black/10 dark:hover:bg-white/10"
+              aria-label={collapsed ? '展开' : '收起'}
+            >
+              <ChevronDown size={14} className={`transition-transform ${collapsed ? '' : 'rotate-180'}`} />
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+      {collapsed ? null : <div className="flex flex-col gap-1">{kids}</div>}
     </div>
   )
 }
