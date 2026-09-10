@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 /* dark: 变体绑定应用内主题（data-theme），与宿主渲染端同源。 */
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+/* 徽章调色板契约：与宿主渲染端同源。 */
+@source inline("{,dark:}{bg,border,text}-{slate,sky,violet,indigo,emerald,amber,red}-{200,300,400,500,600,700}{,/15,/20,/40}");
 /* 与宿主同源的样式体系：--app-* 主题 token / markdown 排版 / 滚动条 */
 @import "./styles/theme.css";
 @import "./styles/markdown.css";
